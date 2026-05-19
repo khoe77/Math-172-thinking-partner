@@ -298,6 +298,28 @@ MODE-SPECIFIC BEHAVIOR:
 Remember: your job is to develop the student's reasoning, not to demonstrate your own. Every response ends with a genuine question that moves their thinking forward."""
 
 
+# ── Gemini call with model fallback ─────────────────────────────────────────
+_MODELS = ["models/gemini-1.5-flash", "gemini-pro"]
+
+def call_gemini(contents, system_prompt: str) -> str:
+    client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
+    last_err = None
+    for model in _MODELS:
+        try:
+            response = client.models.generate_content(
+                model=model,
+                contents=contents,
+                config=types.GenerateContentConfig(
+                    system_instruction=system_prompt,
+                    max_output_tokens=512,
+                ),
+            )
+            return response.text
+        except Exception as e:
+            last_err = e
+    raise last_err
+
+
 # ── Session state init ───────────────────────────────────────────────────────
 if "selected_topic" not in st.session_state:
     st.session_state.selected_topic = TOPIC_KEYS[0]
@@ -418,7 +440,6 @@ if st.session_state.pending_starter:
         st.markdown(user_text)
 
     with st.chat_message("assistant"):
-        client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
         gemini_contents = [
             types.Content(
                 role="user" if m["role"] == "user" else "model",
@@ -427,15 +448,7 @@ if st.session_state.pending_starter:
             for m in st.session_state.messages
         ]
         with st.spinner("Thinking…"):
-            response = client.models.generate_content(
-                model="gemini-1.5-flash",
-                contents=gemini_contents,
-                config=types.GenerateContentConfig(
-                    system_instruction=build_system_prompt(topic_key, mode),
-                    max_output_tokens=512,
-                ),
-            )
-        assistant_text = response.text
+            assistant_text = call_gemini(gemini_contents, build_system_prompt(topic_key, mode))
         st.markdown(assistant_text)
     st.session_state.messages.append({"role": "assistant", "content": assistant_text})
 
@@ -447,7 +460,6 @@ if user_input:
         st.markdown(user_input)
 
     with st.chat_message("assistant"):
-        client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
         gemini_contents = [
             types.Content(
                 role="user" if m["role"] == "user" else "model",
@@ -456,14 +468,6 @@ if user_input:
             for m in st.session_state.messages
         ]
         with st.spinner("Thinking…"):
-            response = client.models.generate_content(
-                model="gemini-1.5-flash",
-                contents=gemini_contents,
-                config=types.GenerateContentConfig(
-                    system_instruction=build_system_prompt(topic_key, mode),
-                    max_output_tokens=512,
-                ),
-            )
-        assistant_text = response.text
+            assistant_text = call_gemini(gemini_contents, build_system_prompt(topic_key, mode))
         st.markdown(assistant_text)
     st.session_state.messages.append({"role": "assistant", "content": assistant_text})
