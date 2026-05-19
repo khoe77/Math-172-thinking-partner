@@ -428,7 +428,7 @@ if st.session_state.pending_starter:
         ]
         with st.spinner("Thinking…"):
             response = client.models.generate_content(
-                model="gemini-2.0-flash",
+                model="gemini-1.5-flash",
                 contents=gemini_contents,
                 config=types.GenerateContentConfig(
                     system_instruction=build_system_prompt(topic_key, mode),
@@ -457,7 +457,7 @@ if user_input:
         ]
         with st.spinner("Thinking…"):
             response = client.models.generate_content(
-                model="gemini-2.0-flash",
+                model="gemini-1.5-flash",
                 contents=gemini_contents,
                 config=types.GenerateContentConfig(
                     system_instruction=build_system_prompt(topic_key, mode),
