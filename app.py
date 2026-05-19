@@ -298,26 +298,18 @@ MODE-SPECIFIC BEHAVIOR:
 Remember: your job is to develop the student's reasoning, not to demonstrate your own. Every response ends with a genuine question that moves their thinking forward."""
 
 
-# ── Gemini call with model fallback ─────────────────────────────────────────
-_MODELS = ["models/gemini-1.5-flash", "gemini-pro"]
-
+# ── Gemini call ──────────────────────────────────────────────────────────────
 def call_gemini(contents, system_prompt: str) -> str:
     client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
-    last_err = None
-    for model in _MODELS:
-        try:
-            response = client.models.generate_content(
-                model=model,
-                contents=contents,
-                config=types.GenerateContentConfig(
-                    system_instruction=system_prompt,
-                    max_output_tokens=512,
-                ),
-            )
-            return response.text
-        except Exception as e:
-            last_err = e
-    raise last_err
+    response = client.models.generate_content(
+        model="models/gemini-2.5-flash",
+        contents=contents,
+        config=types.GenerateContentConfig(
+            system_instruction=system_prompt,
+            max_output_tokens=512,
+        ),
+    )
+    return response.text
 
 
 # ── Session state init ───────────────────────────────────────────────────────
@@ -371,15 +363,6 @@ with st.sidebar:
         "<b>Process Reflection</b> — examines how you think.</small>",
         unsafe_allow_html=True,
     )
-
-    st.divider()
-    with st.expander("🔍 Available Gemini models"):
-        try:
-            _client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
-            model_names = sorted(m.name for m in _client.models.list())
-            st.code("\n".join(model_names), language=None)
-        except Exception as _e:
-            st.error(f"Could not fetch models: {_e}")
 
     st.divider()
     st.markdown(
