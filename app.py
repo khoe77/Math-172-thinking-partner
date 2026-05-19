@@ -373,6 +373,15 @@ with st.sidebar:
     )
 
     st.divider()
+    with st.expander("🔍 Available Gemini models"):
+        try:
+            _client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
+            model_names = sorted(m.name for m in _client.models.list())
+            st.code("\n".join(model_names), language=None)
+        except Exception as _e:
+            st.error(f"Could not fetch models: {_e}")
+
+    st.divider()
     st.markdown(
         '<div class="quote-box">'
         '"Geometry is the art of good reasoning from bad drawings."'
