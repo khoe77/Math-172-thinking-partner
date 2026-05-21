@@ -306,10 +306,14 @@ def call_gemini(contents, system_prompt: str) -> str:
         contents=contents,
         config=types.GenerateContentConfig(
             system_instruction=system_prompt,
-            max_output_tokens=512,
+            max_output_tokens=2048,
         ),
     )
-    return response.text
+    text = response.text or ""
+    candidate = response.candidates[0] if response.candidates else None
+    if candidate and str(candidate.finish_reason) in ("FinishReason.MAX_TOKENS", "MAX_TOKENS", "2"):
+        text += "\n\n> _(Response reached the length limit. Ask me to continue if you'd like more.)_"
+    return text
 
 
 # ── Session state init ───────────────────────────────────────────────────────
